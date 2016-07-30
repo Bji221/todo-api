@@ -11,11 +11,34 @@ var todonextId = 1;
 //middleware to parse the incoming json
 app.use(bodyParser.json());
 
+app.use(function(req, res, next) {
+    console.log('set the access controls! done...!');
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
 app.get('/', function (req, res) {
     res.send('todo API root');
 });
 app.get('/todos', function (req, res) {
-    res.json(todos);
+    var queryparams = req.query;
+    var filteredTodos = todos;    
+    
+    if(queryparams.hasOwnProperty('completed') && queryparams.completed === 'true'){        
+        
+        filteredTodos = _.where(filteredTodos, {completed : true});        
+        
+    } else if(queryparams.hasOwnProperty('completed') && queryparams.completed == 'false'){  
+        
+        filteredTodos = _.where(filteredTodos, {completed : false});
+                                                                                                                                                                                      
+    } else if(queryparams.hasOwnProperty('completed')){
+              
+       return res.status(404).send();
+    }        
+    res.json(filteredTodos)    
+    
 });
 
 
