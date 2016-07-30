@@ -12,7 +12,6 @@ var todonextId = 1;
 app.use(bodyParser.json());
 
 app.use(function(req, res, next) {
-    console.log('set the access controls! done...!');
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
@@ -25,18 +24,19 @@ app.get('/todos', function (req, res) {
     var queryparams = req.query;
     var filteredTodos = todos;    
     
-    if(queryparams.hasOwnProperty('completed') && queryparams.completed === 'true'){        
-        
-        filteredTodos = _.where(filteredTodos, {completed : true});        
-        
-    } else if(queryparams.hasOwnProperty('completed') && queryparams.completed == 'false'){  
-        
-        filteredTodos = _.where(filteredTodos, {completed : false});
-                                                                                                                                                                                      
-    } else if(queryparams.hasOwnProperty('completed')){
-              
+    if(queryparams.hasOwnProperty('completed') && queryparams.completed === 'true'){     
+        filteredTodos = _.where(filteredTodos, {completed : true});                
+    } else if(queryparams.hasOwnProperty('completed') && queryparams.completed == 'false'){       filteredTodos = _.where(filteredTodos, {completed : false});   
+    } else if(queryparams.hasOwnProperty('completed')){              
        return res.status(404).send();
-    }        
+    }      
+    
+    if(queryparams.hasOwnProperty('q') && queryparams.q.length >0){
+        filteredTodos = _.filter(filteredTodos, function(todo){
+            return todo.description.toLowerCase().indexOf(queryparams.q.toLowerCase()) > -1;
+        });
+    }
+    
     res.json(filteredTodos)    
     
 });
