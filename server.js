@@ -12,7 +12,7 @@ var todos = [{
 }, {
     id: 3
     , description: 'Have fun'
-    , completed: true
+    , completed: false
 }];
 app.get('/', function (req, res) {
     res.send('todo API root');
