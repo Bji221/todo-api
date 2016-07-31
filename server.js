@@ -44,37 +44,40 @@ app.get('/todos', function (req, res) {
  */
 app.get('/todos/:id', function (req, res) {
     var todoid = parseInt(req.params.id, 10);
-    //findwhere returns one match!
-    var found = _.findWhere(todos, {
-        id: todoid
+    db.todo.findById(todoid).then(function (todo) {
+        if (todo) {
+            res.status(200).send(todo.toJSON());
+        }
+        else {
+            res.status(404).send();
+        }
+    }).catch(function (e) {
+        res.status(500).send(e);
     });
+    //findwhere returns one match!
+    /*var found = _.findWhere(todos, {
+        id: todoid
+    });   */
     /*todos.forEach(function (todo) {
         if (todo.id === todoid) {
             found = todo;
         }
     });*/
-    if (!found) {
+    /*if (!found) {
         res.status(404).send();
     }
     else {
         res.json(found);
-    }
+    }*/
 });
-
-
-
 app.post('/todos', function (req, res) {
     var body = req.body;
     body = _.pick(req.body, 'description', 'completed');
-    
-    db.todo.create(body).then(function(todo){
-       res.status(200).send(todo.toJSON());
-    }).catch(function(e){
+    db.todo.create(body).then(function (todo) {
+        res.status(200).send(todo.toJSON());
+    }).catch(function (e) {
         res.status(400).json(e);
     });
-    
-    
-    
     //console.log(cleanedTodo);
     /*
      * validate for correct properties, and make sure no additional prop is given in
@@ -87,9 +90,7 @@ app.post('/todos', function (req, res) {
     body.id = todonextId++;
     todos.push(body);
     res.json(body);*/
-
 });
-
 //Delete todos/:id
 app.delete('/todos/:id', function (req, res) {
     var todoid = parseInt(req.params.id, 10);
@@ -107,7 +108,6 @@ app.delete('/todos/:id', function (req, res) {
         //json sends 200
     }
 });
-
 app.put('/todos/:id', function (req, res) {
     var todoid = parseInt(req.params.id, 10);
     var matchedTodo = _.findWhere(todos, {
@@ -137,11 +137,10 @@ app.put('/todos/:id', function (req, res) {
     res.json(matchedTodo);
     //objects - pass by reference
 });
-
 /*
  * sync the db and start the function when the sync has no failure
  */
-db.sequelize.sync({force:true}).then(function () {
+db.sequelize.sync( /*{force:true}*/ ).then(function () {
     app.listen(PORT, function () {
         console.log('server started at ' + PORT + '....');
     });
