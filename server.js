@@ -210,6 +210,14 @@ app.put('/todos/:id', function (req, res) {
     res.json(matchedTodo);*/
     //objects - pass by reference
 });
+app.post('/users', function (req, res) {
+    var body = _.pick(req.body, 'email', 'password');
+    db.user.create(body).then(function (user) {
+        res.json(user);
+    }, function (e) {
+        res.status(400).send(e);
+    });
+});
 /*
  * sync the db and start the function when the sync has no failure
  */
