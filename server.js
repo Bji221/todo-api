@@ -13,12 +13,44 @@ app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
+
 app.get('/', function (req, res) {
     res.send('todo API root');
 });
+
 app.get('/todos', function (req, res) {
-    var queryparams = req.query;
-    var filteredTodos = todos;
+    var query = req.query;
+    var where = {};
+    
+    if(query.hasOwnProperty('completed') && query.completed == 'true'){
+        where.completed = true;
+        console.log('completed---'+where.completed);
+    } else if(query.hasOwnProperty('completed') && query.completed == 'false'){
+        where.completed = false;
+    }
+    
+    if(query.hasOwnProperty('q') && query.q.length > 0){
+        where.description = {
+                $like : '%' + query.q + '%'
+        }
+    } else if(query.hasOwnProperty('q') && query.q.length <= 0){
+        res.status(400).send();
+    }      
+    
+    db.todo.findAll({
+        where : where
+    }).then(function(todos){
+        if(todos){
+            res.json(todos);
+        }else {
+            res.status(404).send();
+        }
+    }).catch(function(e){
+        res.status(500).send();
+    });
+    
+    /*var queryparams = req.query;   
+     * var filteredTodos = todos;
     if (queryparams.hasOwnProperty('completed') && queryparams.completed === 'true') {
         filteredTodos = _.where(filteredTodos, {
             completed: true
@@ -37,7 +69,7 @@ app.get('/todos', function (req, res) {
             return todo.description.toLowerCase().indexOf(queryparams.q.toLowerCase()) > -1;
         });
     }
-    res.json(filteredTodos)
+    res.json(filteredTodos)*/
 });
 /*
  * refactor with _ as it has many in built functions like for searching, etc, eg., where(, findWhere() function
