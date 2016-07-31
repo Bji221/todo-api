@@ -6,6 +6,7 @@ var db = require('./db.js');
 var PORT = process.env.PORT || 3000;
 var todos = [];
 var todonextId = 1;
+var bcrypt = require('bcrypt');
 //middleware to parse the incoming json
 app.use(bodyParser.json());
 app.use(function (req, res, next) {
@@ -213,10 +214,32 @@ app.put('/todos/:id', function (req, res) {
 app.post('/users', function (req, res) {
     var body = _.pick(req.body, 'email', 'password');
     db.user.create(body).then(function (user) {
-        res.json(user);
+        res.json(user.toPublicJSON());
     }, function (e) {
         res.status(400).send(e);
     });
+});
+//post users/login
+app.post('/users/login', function (req, res) {
+    var body = _.pick(req.body, 'email', 'password');
+    if (typeof body.email === 'string' && typeof body.password === 'string') {
+        db.user.findOne({
+            where: {
+                email: body.email
+            }
+        }).then(function (user) {
+            if (!user || !bcrypt.compareSync(body.password, user.get('password_hash'))) {
+                //authentication is possible but failed! like a bad email it failed
+                return res.status(401).send();
+            }
+            res.json(user.toPublicJSON());
+        }).catch(function (e) {
+            res.status(500).send(e);
+        });
+    }
+    else {
+        res.status(400).send();
+    }
 });
 /*
  * sync the db and start the function when the sync has no failure
