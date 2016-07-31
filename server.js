@@ -222,7 +222,16 @@ app.post('/users', function (req, res) {
 //post users/login
 app.post('/users/login', function (req, res) {
     var body = _.pick(req.body, 'email', 'password');
-    if (typeof body.email === 'string' && typeof body.password === 'string') {
+    
+    db.user.authenticate(body).then(function(user){
+        res.json(user.toPublicJSON());
+    }, function(){
+        //no matter what caused this, just throw a 401
+        res.status(401).send();
+    });
+    
+    //mobve this to model method
+    /*if (typeof body.email === 'string' && typeof body.password === 'string') {
         db.user.findOne({
             where: {
                 email: body.email
@@ -239,12 +248,12 @@ app.post('/users/login', function (req, res) {
     }
     else {
         res.status(400).send();
-    }
+    }*/
 });
 /*
  * sync the db and start the function when the sync has no failure
  */
-db.sequelize.sync( /*{force:true}*/ ).then(function () {
+db.sequelize.sync( {force:true} ).then(function () {
     app.listen(PORT, function () {
         console.log('server started at ' + PORT + '....');
     });
