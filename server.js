@@ -155,7 +155,35 @@ app.delete('/todos/:id', function (req, res) {
 });
 app.put('/todos/:id', function (req, res) {
     var todoid = parseInt(req.params.id, 10);
-    var matchedTodo = _.findWhere(todos, {
+    var body = _.pick(req.body, 'description', 'completed');
+    var attributes = {};
+    if (body.hasOwnProperty('completed')) {
+        attributes.completed = body.completed;
+    }
+    if (body.hasOwnProperty('description')) {
+        attributes.description = body.description;
+    }
+    /*
+     * we have to use instance methods not model methods
+     * model methods are run on models on db... like real time...
+     * instance methods are run on fetched models...
+     */
+    db.todo.findById(todoid).then(function (todo) {
+        if (todo) {
+            return todo.update(attributes);
+        }
+        else {
+            res.status(400).send();
+        }
+    }, function () {
+        res.status(500).send();
+    }).then(function (todo) {
+        //chain for update success and failing
+        res.status(200).send(todo.toJSON());
+    }, function (e) {
+        res.status(400).json(e);
+    });
+    /*var matchedTodo = _.findWhere(todos, {
         id: todoid
     });
     var body = _.pick(req.body, 'description', 'completed');
@@ -179,7 +207,7 @@ app.put('/todos/:id', function (req, res) {
         return res.status(400).send();
     }
     _.extend(matchedTodo, validAttributes);
-    res.json(matchedTodo);
+    res.json(matchedTodo);*/
     //objects - pass by reference
 });
 /*

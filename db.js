@@ -4,7 +4,8 @@
 var Sequelize = require('sequelize');
 var env = process.env.NODE_ENV || 'development';
 var sequelize;
-if (env == 'production') {
+
+if (env === 'production') {
     //this is true only when in production - heroku
     sequelize = new Sequelize(process.env.DATABASE_URL, {
         'dialect' : 'postgres'
