@@ -289,7 +289,7 @@ app.post('/users/login', function (req, res) {
 /*
  * sync the db and start the function when the sync has no failure
  */
-db.sequelize.sync( /*{force:true}*/ ).then(function () {
+db.sequelize.sync( {force:true} ).then(function () {
     app.listen(PORT, function () {
         console.log('server started at ' + PORT + '....');
     });
