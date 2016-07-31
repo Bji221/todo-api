@@ -14,7 +14,7 @@ app.use(function (req, res, next) {
     next();
 });
 
-app.get('/', function (req, res) {
+app.get('/', function (req, res){
     res.send('todo API root');
 });
 
@@ -27,16 +27,14 @@ app.get('/todos', function (req, res) {
         console.log('completed---'+where.completed);
     } else if(query.hasOwnProperty('completed') && query.completed == 'false'){
         where.completed = false;
-    }
-    
+    }    
     if(query.hasOwnProperty('q') && query.q.length > 0){
         where.description = {
                 $like : '%' + query.q + '%'
         }
     } else if(query.hasOwnProperty('q') && query.q.length <= 0){
         res.status(400).send();
-    }      
-    
+    }
     db.todo.findAll({
         where : where
     }).then(function(todos){
@@ -47,8 +45,7 @@ app.get('/todos', function (req, res) {
         }
     }).catch(function(e){
         res.status(500).send();
-    });
-    
+    });    
     /*var queryparams = req.query;   
      * var filteredTodos = todos;
     if (queryparams.hasOwnProperty('completed') && queryparams.completed === 'true') {
