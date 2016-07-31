@@ -7,6 +7,9 @@ var PORT = process.env.PORT || 3000;
 var todos = [];
 var todonextId = 1;
 var bcrypt = require('bcrypt');
+
+var middleware = require('./middleware.js')(db);
+
 //middleware to parse the incoming json
 app.use(bodyParser.json());
 app.use(function (req, res, next) {
@@ -17,7 +20,8 @@ app.use(function (req, res, next) {
 app.get('/', function (req, res) {
     res.send('todo API root');
 });
-app.get('/todos', function (req, res) {
+
+app.get('/todos',middleware.requireAuthentication, function (req, res) {
     var query = req.query;
     var where = {};
     if (query.hasOwnProperty('completed') && query.completed == 'true') {
@@ -72,7 +76,7 @@ app.get('/todos', function (req, res) {
 /*
  * refactor with _ as it has many in built functions like for searching, etc, eg., where(, findWhere() function
  */
-app.get('/todos/:id', function (req, res) {
+app.get('/todos/:id',middleware.requireAuthentication, function (req, res) {
     var todoid = parseInt(req.params.id, 10);
     db.todo.findById(todoid).then(function (todo) {
         if (todo) {
@@ -100,7 +104,7 @@ app.get('/todos/:id', function (req, res) {
         res.json(found);
     }*/
 });
-app.post('/todos', function (req, res) {
+app.post('/todos', middleware.requireAuthentication, function (req, res) {
     var body = req.body;
     body = _.pick(req.body, 'description', 'completed');
     db.todo.create(body).then(function (todo) {
@@ -122,7 +126,7 @@ app.post('/todos', function (req, res) {
     res.json(body);*/
 });
 //Delete todos/:id
-app.delete('/todos/:id', function (req, res) {
+app.delete('/todos/:id', middleware.requireAuthentication, function (req, res) {
     var todoid = parseInt(req.params.id, 10);
     db.todo.destroy({
         where: {
@@ -154,7 +158,7 @@ app.delete('/todos/:id', function (req, res) {
         //json sends 200
     }*/
 });
-app.put('/todos/:id', function (req, res) {
+app.put('/todos/:id',middleware.requireAuthentication, function (req, res) {
     var todoid = parseInt(req.params.id, 10);
     var body = _.pick(req.body, 'description', 'completed');
     var attributes = {};
