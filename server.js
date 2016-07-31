@@ -26,7 +26,7 @@ app.get('/todos',middleware.requireAuthentication, function (req, res) {
     var where = {};
     if (query.hasOwnProperty('completed') && query.completed == 'true') {
         where.completed = true;
-        console.log('completed---' + where.completed);
+        
     }
     else if (query.hasOwnProperty('completed') && query.completed == 'false') {
         where.completed = false;
@@ -39,6 +39,9 @@ app.get('/todos',middleware.requireAuthentication, function (req, res) {
     else if (query.hasOwnProperty('q') && query.q.length <= 0) {
         res.status(400).send();
     }
+    
+    where.userId = req.user.get('id');
+    
     db.todo.findAll({
         where: where
     }).then(function (todos) {
@@ -78,7 +81,13 @@ app.get('/todos',middleware.requireAuthentication, function (req, res) {
  */
 app.get('/todos/:id',middleware.requireAuthentication, function (req, res) {
     var todoid = parseInt(req.params.id, 10);
-    db.todo.findById(todoid).then(function (todo) {
+    
+    db.todo.findOne({
+        where : {
+            id : todoid,
+            userId : req.user.get('id')
+        }
+    }).then(function (todo) {
         if (todo) {
             res.status(200).send(todo.toJSON());
         }
@@ -107,8 +116,21 @@ app.get('/todos/:id',middleware.requireAuthentication, function (req, res) {
 app.post('/todos', middleware.requireAuthentication, function (req, res) {
     var body = req.body;
     body = _.pick(req.body, 'description', 'completed');
+   
+    
     db.todo.create(body).then(function (todo) {
-        res.status(200).send(todo.toJSON());
+        //req.user set to the user object by middleware
+        req.user.addTodo(todo).then(function(){
+            //since the todo is different from the received todo, after association, reload
+            return todo.reload();
+        }).then(function(todo){
+            res.status(200).send(todo.toJSON());      
+        });
+        
+        
+        //res.status(200).send(todo.toJSON());      
+        
+        
     }).catch(function (e) {
         res.status(400).json(e);
     });
@@ -130,7 +152,8 @@ app.delete('/todos/:id', middleware.requireAuthentication, function (req, res) {
     var todoid = parseInt(req.params.id, 10);
     db.todo.destroy({
         where: {
-            id: todoid
+            id: todoid,
+            userId : req.user.get('id')
         }
     }).then(function (rowsDeleted) {
         if (rowsDeleted === 0) {
@@ -173,7 +196,12 @@ app.put('/todos/:id',middleware.requireAuthentication, function (req, res) {
      * model methods are run on models on db... like real time...
      * instance methods are run on fetched models...
      */
-    db.todo.findById(todoid).then(function (todo) {
+    db.todo.findOne({
+    where : {  
+        id : todoid,
+        userId : req.user.get('id')
+    }
+    }).then(function (todo) {
         if (todo) {
             return todo.update(attributes);
         }
@@ -184,7 +212,7 @@ app.put('/todos/:id',middleware.requireAuthentication, function (req, res) {
         res.status(500).send();
     }).then(function (todo) {
         //chain for update success and failing
-        res.status(200).send(todo.toJSON());
+        res.status(200).send(todo);
     }, function (e) {
         res.status(400).json(e);
     });
@@ -237,8 +265,7 @@ app.post('/users/login', function (req, res) {
     }, function(){
         //no matter what caused this, just throw a 401
         res.status(401).send();
-    });
-    
+    });    
     //mobve this to model method
     /*if (typeof body.email === 'string' && typeof body.password === 'string') {
         db.user.findOne({
